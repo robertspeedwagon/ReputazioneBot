@@ -1,20 +1,29 @@
 package org.speedwagonfoundation.reputazionebot.businesslogic.usersmanagement;
 
-import java.util.HashMap;
+import org.dizitart.no2.*;
+import org.dizitart.no2.objects.ObjectRepository;
+import org.dizitart.no2.objects.filters.ObjectFilters;
 
 public class UserManager {
-    private final static HashMap<Integer, UserTracker> userScores;
+    private final static Nitrite userDatabase;
 
     static {
-        userScores = new HashMap<>();
+        userDatabase = Nitrite.builder()
+                .compressed()
+                .filePath("database/test.db")
+                .openOrCreate("user", "password");
     }
 
     public static Long scoreUp(Integer userId){
-        UserTracker tracker = userScores.get(userId);
+        ObjectRepository<UserTracker> userCollection = userDatabase.getRepository(UserTracker.class);
+        UserTracker tracker = userCollection.find(ObjectFilters.eq("userId", userId)).firstOrDefault();
         if(tracker == null){
             tracker = new UserTracker(userId);
-            userScores.put(userId, tracker);
+            userCollection.insert(tracker);
         }
-        return tracker.scoreUp();
+        Long score = tracker.scoreUp();
+        userCollection.update(tracker);
+        userDatabase.commit();
+        return score;
     }
 }

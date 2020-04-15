@@ -6,7 +6,7 @@
 
     <groupId>org.speedwagonfoundation</groupId>
     <artifactId>ReputazioneBot</artifactId>
-    <version>0.1-SNAPSHOT</version>
+    <version>0.2-SNAPSHOT</version>
 
     <build>
         <plugins>
@@ -32,6 +32,11 @@
             <groupId>org.telegram</groupId>
             <artifactId>telegrambots</artifactId>
             <version>4.7</version>
+        </dependency>
+        <dependency>
+            <groupId>org.dizitart</groupId>
+            <artifactId>nitrite</artifactId>
+            <version>3.4.1</version>
         </dependency>
     </dependencies>
 </project>
