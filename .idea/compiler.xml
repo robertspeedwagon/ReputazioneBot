@@ -10,7 +10,7 @@
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
-      <module name="ReputazioneBot" target="1.5" />
+      <module name="ReputazioneBot" target="9" />
     </bytecodeTargetLevel>
   </component>
 </project>
