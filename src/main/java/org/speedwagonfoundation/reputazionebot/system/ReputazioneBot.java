@@ -1,6 +1,7 @@
 package org.speedwagonfoundation.reputazionebot.system;
 
 import org.speedwagonfoundation.reputazionebot.businesslogic.GroupMessageManager;
+import org.speedwagonfoundation.reputazionebot.businesslogic.constants.CommandConstants;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
@@ -19,7 +20,17 @@ public class ReputazioneBot extends TelegramLongPollingBot {
                 e.printStackTrace();
             }
         } else if(update.getMessage().getChat().isUserChat()){
-            // Future
+            if(update.getMessage().getText().equals(CommandConstants.INFO)){
+                SendMessage response = new SendMessage()
+                        .setChatId(update.getMessage().getChatId())
+                        .setText("Bot sviluppato da @Muso97 per Hentai Club" +
+                                "\nCodice sorgente: https://github.com/robertspeedwagon/ReputazioneBot");
+                try {
+                    execute(response);
+                } catch (TelegramApiException e) {
+                    e.printStackTrace();
+                }
+            }
         }
     }
 
