@@ -12,13 +12,15 @@ import java.io.Serializable;
 })
 public class UserTracker implements Serializable {
     @Id
-    Integer userId;
-    Long score;
+    private Integer userId;
+    private Long score;
+    private String username;
 
     public UserTracker() {}
 
-    public UserTracker(Integer userId){
+    public UserTracker(Integer userId, String username){
         this.userId = userId;
+        this.username = username;
         this.score = 0L;
     }
 
@@ -40,5 +42,17 @@ public class UserTracker implements Serializable {
 
     public void setUserId(Integer userId) {
         this.userId = userId;
+    }
+
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder("Profilo dell'utente @");
+        sb.append(username)
+            .append(" [ID: ")
+            .append(userId)
+            .append("]:\n")
+            .append("Punteggio: ")
+            .append(score);
+        return sb.toString();
     }
 }

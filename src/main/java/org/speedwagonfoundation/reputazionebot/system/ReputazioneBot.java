@@ -1,21 +1,37 @@
 package org.speedwagonfoundation.reputazionebot.system;
 
 import org.speedwagonfoundation.reputazionebot.businesslogic.GroupMessageManager;
+import org.speedwagonfoundation.reputazionebot.businesslogic.administration.AdminManager;
 import org.speedwagonfoundation.reputazionebot.businesslogic.constants.CommandConstants;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
+import org.telegram.telegrambots.meta.api.methods.groupadministration.GetChatAdministrators;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 public class ReputazioneBot extends TelegramLongPollingBot {
 
+    public static AdminManager adminManager;
+
+    public ReputazioneBot(){
+        adminManager = new AdminManager();
+    }
 
     @Override
     public void onUpdateReceived(Update update) {
         if(update.getMessage().getChat().isSuperGroupChat() || update.getMessage().getChat().isGroupChat()) {
+            if(!adminManager.isInitialized()){
+                try {
+                    adminManager.init(execute(new GetChatAdministrators().setChatId(update.getMessage().getChat().getId())));
+                } catch (TelegramApiException e) {
+                    e.printStackTrace();
+                }
+            }
             try {
                 SendMessage response = GroupMessageManager.manageMessageFromGroup(update);
-                execute(response);
+                if(response != null){
+                    execute(response);
+                }
             } catch (TelegramApiException e) {
                 e.printStackTrace();
             }
