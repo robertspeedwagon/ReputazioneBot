@@ -60,7 +60,7 @@ public class GroupMessageManager {
     private static SendMessage manageAdminCommands(Update update) {
         SendMessage message = null;
         if(StringUtils.startsWith(update.getMessage().getText(), CommandConstants.SET_POINTS)
-                && update.getMessage().getReplyToMessage() != null){
+                && update.getMessage().getReplyToMessage() != null) {
             message = new SendMessage();
             String[] splitMessage = update.getMessage().getText().split(" ");
             if(splitMessage.length == 2 && StringUtils.isNumeric(splitMessage[1])){

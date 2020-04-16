@@ -27,3 +27,5 @@ hs_err_pid*
 /database/
 # Maven build output
 /target/
+# File properties
+/config.properties

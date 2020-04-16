@@ -11,12 +11,20 @@ import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.Properties;
+
 public class ReputazioneBot extends TelegramLongPollingBot {
 
     public static AdminManager adminManager;
+    public static Properties config;
 
-    public ReputazioneBot(){
+    public ReputazioneBot() throws IOException {
         adminManager = new AdminManager();
+        config = new Properties();
+        config.load(new FileReader("config.properties"));
     }
 
     @Override
@@ -60,11 +68,11 @@ public class ReputazioneBot extends TelegramLongPollingBot {
 
     @Override
     public String getBotUsername() {
-        return "HCReputazioneBot";
+        return config.getProperty("telegram.username");
     }
 
     @Override
     public String getBotToken() {
-        return "917826203:AAE3qG7dmQd2w-tgyCvf28t3eT1AZ8NTAGs";
+        return config.getProperty("telegram.bottoken");
     }
 }

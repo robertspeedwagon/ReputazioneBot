@@ -4,6 +4,7 @@ import org.dizitart.no2.*;
 import org.dizitart.no2.objects.ObjectRepository;
 import org.dizitart.no2.objects.filters.ObjectFilters;
 import org.jetbrains.annotations.NotNull;
+import org.speedwagonfoundation.reputazionebot.system.ReputazioneBot;
 import org.telegram.telegrambots.meta.api.objects.User;
 
 import java.util.Date;
@@ -22,15 +23,14 @@ public class UserManager {
     static {
         userDatabase = Nitrite.builder()
                 .compressed()
-                .filePath("database/test.db")
-                //.filePath("database/prod.db")
+                .filePath(ReputazioneBot.config.getProperty("db.path"))
                 .openOrCreate();
         userCollection = userDatabase.getRepository(UserTracker.class);
         deleteTimer = new Timer("removeDeletedUsers", true);
         deleteTimer.schedule(new RemoveExitedUsers(), 0, 120 * 1000);
     }
 
-    public static Long scoreUp(User user){
+    public static Long scoreUp(User user) {
         UserTracker tracker = getOrCreateUserTracker(user);
         Long score = tracker.scoreUp();
         userCollection.update(tracker);
@@ -41,7 +41,7 @@ public class UserManager {
     @NotNull
     public static UserTracker getOrCreateUserTracker(User user) {
         UserTracker tracker = userCollection.find(ObjectFilters.eq("userId", user.getId())).firstOrDefault();
-        if(tracker == null){
+        if (tracker == null) {
             tracker = new UserTracker(user.getId(), user.getUserName());
             userCollection.insert(tracker);
         }
@@ -57,7 +57,7 @@ public class UserManager {
 
     public static Long addScore(User user, Long addScore) {
         UserTracker tracker = getOrCreateUserTracker(user);
-        setScore(user,tracker.getScore() + addScore);
+        setScore(user, tracker.getScore() + addScore);
         return tracker.getScore() + addScore;
     }
 
@@ -75,18 +75,18 @@ public class UserManager {
     }
 
     public static void removeUser(User leftChatMember) {
-        UserTracker utenteRimosso = getOrCreateUserTracker(leftChatMember);
-        utenteRimosso.setQuitOn(Date.from(Instant.now()));
-        userCollection.update(utenteRimosso);
+        UserTracker removedUser = getOrCreateUserTracker(leftChatMember);
+        removedUser.setQuitOn(Date.from(Instant.now()));
+        userCollection.update(removedUser);
         userDatabase.commit();
     }
 
     public static void addUser(User user) {
         UserTracker userTracker = getOrCreateUserTracker(user);
-        if(userTracker.getQuitOn() != null){
+        if (userTracker.getQuitOn() != null) {
             userTracker.setQuitOn(null);
             userCollection.update(userTracker);
-        }else{
+        } else {
             userCollection.insert(userTracker);
         }
         userDatabase.commit();
@@ -95,7 +95,7 @@ public class UserManager {
     private static class RemoveExitedUsers extends TimerTask {
         @Override
         public void run() {
-            Date oneWeekAgo = Date.from(Instant.now().minus(7, ChronoUnit.DAYS));
+            Date oneWeekAgo = Date.from(Instant.now().minus(Long.parseLong(ReputazioneBot.config.getProperty("misc.daysBeforeRemovingUser", "7")), ChronoUnit.DAYS));
             WriteResult result = userCollection.remove(ObjectFilters.lt("quitOn", oneWeekAgo));
             result.forEach(nitriteId -> System.out.println("Removed user with NitriteId " + nitriteId.toString()));
             userDatabase.commit();
