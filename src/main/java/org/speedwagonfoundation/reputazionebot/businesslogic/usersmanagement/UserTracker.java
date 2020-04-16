@@ -6,7 +6,6 @@ import org.dizitart.no2.objects.Index;
 import org.dizitart.no2.objects.Indices;
 
 import java.io.Serializable;
-import java.time.Instant;
 import java.util.Date;
 
 @Indices({

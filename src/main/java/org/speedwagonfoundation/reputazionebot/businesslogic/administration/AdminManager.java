@@ -1,5 +1,6 @@
 package org.speedwagonfoundation.reputazionebot.businesslogic.administration;
 
+import org.speedwagonfoundation.reputazionebot.system.log.Log;
 import org.telegram.telegrambots.meta.api.objects.ChatMember;
 
 import java.io.Serializable;
@@ -20,6 +21,7 @@ public class AdminManager {
                     .forEach(user -> adminIds.add(((ChatMember)user).getUser().getId()));
             initialized = true;
         }
+        Log.log("Elenco amministratori inizializzato.");
     }
 
     public boolean isAdministrator(Integer id) {

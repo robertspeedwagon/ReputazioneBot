@@ -5,6 +5,7 @@ import org.dizitart.no2.objects.ObjectRepository;
 import org.dizitart.no2.objects.filters.ObjectFilters;
 import org.jetbrains.annotations.NotNull;
 import org.speedwagonfoundation.reputazionebot.system.ReputazioneBot;
+import org.speedwagonfoundation.reputazionebot.system.log.Log;
 import org.telegram.telegrambots.meta.api.objects.User;
 
 import java.util.Date;
@@ -27,7 +28,8 @@ public class UserManager {
                 .openOrCreate();
         userCollection = userDatabase.getRepository(UserTracker.class);
         deleteTimer = new Timer("removeDeletedUsers", true);
-        deleteTimer.schedule(new RemoveExitedUsers(), 0, 120 * 1000);
+        deleteTimer.schedule(new RemoveExitedUsers(), 0, 60 * 60 * 1000);
+        Log.log("Database utenti caricato");
     }
 
     public static Long scoreUp(User user) {
@@ -79,6 +81,7 @@ public class UserManager {
         removedUser.setQuitOn(Date.from(Instant.now()));
         userCollection.update(removedUser);
         userDatabase.commit();
+        Log.log("Utente " + leftChatMember.getUserName() + " [ID: " + leftChatMember.getId() + " uscito dal gruppo.");
     }
 
     public static void addUser(User user) {
@@ -90,6 +93,11 @@ public class UserManager {
             userCollection.insert(userTracker);
         }
         userDatabase.commit();
+        Log.log("Utente " + user.getUserName() + " [ID: " + user.getId() + "] entrato nel gruppo.");
+    }
+
+    public static void removeUser(User leftChatMember, User kickedBy) {
+        Log.log("Utente " + leftChatMember.getUserName() + " [ID: " + leftChatMember.getId() + "] rimosso dal gruppo da " + kickedBy.getUserName() + " [ID: " + kickedBy.getId() + "]");
     }
 
     private static class RemoveExitedUsers extends TimerTask {
@@ -97,7 +105,7 @@ public class UserManager {
         public void run() {
             Date oneWeekAgo = Date.from(Instant.now().minus(Long.parseLong(ReputazioneBot.config.getProperty("misc.daysBeforeRemovingUser", "7")), ChronoUnit.DAYS));
             WriteResult result = userCollection.remove(ObjectFilters.lt("quitOn", oneWeekAgo));
-            result.forEach(nitriteId -> System.out.println("Removed user with NitriteId " + nitriteId.toString()));
+            result.forEach(nitriteId -> Log.log("Rimosso definitivamente l'utente con il NitriteId: " + nitriteId.toString()));
             userDatabase.commit();
         }
     }

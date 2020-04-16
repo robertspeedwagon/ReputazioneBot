@@ -9,5 +9,6 @@ public interface CommandConstants {
     String ADD_POINTS = "/addpoints";
     String PROFILE = "/profilo";
     String RANKING = "/classifica";
+    String COMMANDS = "/comandi";
     String[] ADMIN_COMMANDS = new String[]{ SET_POINTS, ADD_POINTS };
 }
