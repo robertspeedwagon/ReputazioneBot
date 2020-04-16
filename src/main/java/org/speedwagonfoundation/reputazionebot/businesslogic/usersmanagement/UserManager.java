@@ -6,6 +6,8 @@ import org.dizitart.no2.objects.filters.ObjectFilters;
 import org.jetbrains.annotations.NotNull;
 import org.telegram.telegrambots.meta.api.objects.User;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
 public class UserManager {
     private static final Nitrite userDatabase;
     private static final ObjectRepository<UserTracker> userCollection;
@@ -48,5 +50,18 @@ public class UserManager {
         UserTracker tracker = getOrCreateUser(user);
         setScore(user,tracker.getScore() + addScore);
         return tracker.getScore() + addScore;
+    }
+
+    public static String getRanking() {
+        AtomicInteger i = new AtomicInteger(1);
+        StringBuilder sb = new StringBuilder("Classifica dei punteggi: ");
+        userCollection
+                .find(FindOptions.sort("score", SortOrder.Descending).thenLimit(0, 10))
+                .forEach(userTracker -> sb.append("\n").append(buildRank(i.getAndIncrement(), userTracker)));
+        return sb.toString();
+    }
+
+    private static String buildRank(int position, UserTracker userTracker) {
+        return position + ". - @" + userTracker.getUsername() + " (" + userTracker.getScore() + ")";
     }
 }

@@ -37,6 +37,10 @@ public class GroupMessageManager {
                 message = new SendMessage()
                     .setChatId(update.getMessage().getChatId())
                     .setText(UserManager.getOrCreateUser(update.getMessage().getFrom()).toString());
+            }else if(CommandConstants.RANKING.equals(update.getMessage().getText())) {
+                message = new SendMessage()
+                        .setChatId(update.getMessage().getChatId())
+                        .setText(UserManager.getRanking());
             }else if(ReputazioneBot.adminManager.isAdministrator(update.getMessage().getFrom().getId()) && StringUtils.startsWithAny(update.getMessage().getText(), CommandConstants.ADMIN_COMMANDS)){
                 message = manageAdminCommands(update);
             }

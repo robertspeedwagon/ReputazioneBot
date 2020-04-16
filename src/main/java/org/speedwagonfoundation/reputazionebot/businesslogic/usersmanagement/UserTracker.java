@@ -44,6 +44,14 @@ public class UserTracker implements Serializable {
         this.userId = userId;
     }
 
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder("Profilo dell'utente @");
