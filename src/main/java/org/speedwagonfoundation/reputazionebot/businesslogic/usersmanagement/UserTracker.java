@@ -6,6 +6,8 @@ import org.dizitart.no2.objects.Index;
 import org.dizitart.no2.objects.Indices;
 
 import java.io.Serializable;
+import java.time.Instant;
+import java.util.Date;
 
 @Indices({
         @Index(value = "userId", type = IndexType.Unique)
@@ -15,6 +17,7 @@ public class UserTracker implements Serializable {
     private Integer userId;
     private Long score;
     private String username;
+    private Date quitOn;
 
     public UserTracker() {}
 
@@ -22,6 +25,7 @@ public class UserTracker implements Serializable {
         this.userId = userId;
         this.username = username;
         this.score = 0L;
+        quitOn = null;
     }
 
     public Long scoreUp() {
@@ -62,5 +66,13 @@ public class UserTracker implements Serializable {
             .append("Punteggio: ")
             .append(score);
         return sb.toString();
+    }
+
+    public Date getQuitOn() {
+        return quitOn;
+    }
+
+    public void setQuitOn(Date quitOn) {
+        this.quitOn = quitOn;
     }
 }

@@ -13,7 +13,7 @@ public class AdminManager {
         return initialized;
     }
 
-    public <T extends Serializable> void init(ArrayList getAdminsResult) {
+    public void init(ArrayList<ChatMember> getAdminsResult) {
         if(getAdminsResult != null){
             adminIds = new ArrayList<>();
             getAdminsResult

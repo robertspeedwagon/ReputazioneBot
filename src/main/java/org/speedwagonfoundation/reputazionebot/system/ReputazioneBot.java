@@ -6,6 +6,8 @@ import org.speedwagonfoundation.reputazionebot.businesslogic.constants.CommandCo
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.groupadministration.GetChatAdministrators;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.methods.updatingmessages.DeleteMessage;
+import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
@@ -30,7 +32,13 @@ public class ReputazioneBot extends TelegramLongPollingBot {
             try {
                 SendMessage response = GroupMessageManager.manageMessageFromGroup(update);
                 if(response != null){
-                    execute(response);
+                    Message telegramResp = execute(response);
+                    if(update.getMessage() != null && CommandConstants.INCREASE_REPUTATION.equals(update.getMessage().getText())){
+                        if(GroupMessageManager.getLastReputationUpMessage() != null) {
+                            execute(new DeleteMessage(update.getMessage().getChatId(), GroupMessageManager.getLastReputationUpMessage()));
+                        }
+                        GroupMessageManager.setLastReputationUpMessage(telegramResp.getMessageId());
+                    }
                 }
             } catch (TelegramApiException e) {
                 e.printStackTrace();

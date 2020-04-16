@@ -1,6 +1,5 @@
 package org.speedwagonfoundation.reputazionebot.businesslogic;
 
-import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.speedwagonfoundation.reputazionebot.businesslogic.constants.CommandConstants;
 import org.speedwagonfoundation.reputazionebot.businesslogic.usersmanagement.UserManager;
@@ -9,6 +8,9 @@ import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
 
 public class GroupMessageManager {
+
+    private static Integer lastReputationUpMessage;
+
     public static SendMessage manageMessageFromGroup(Update update) {
         SendMessage message = null;
         if(update.getMessage().hasText()) {
@@ -36,7 +38,7 @@ public class GroupMessageManager {
             } else if(CommandConstants.PROFILE.equals(update.getMessage().getText())) {
                 message = new SendMessage()
                     .setChatId(update.getMessage().getChatId())
-                    .setText(UserManager.getOrCreateUser(update.getMessage().getFrom()).toString());
+                    .setText(UserManager.getOrCreateUserTracker(update.getMessage().getFrom()).toString());
             }else if(CommandConstants.RANKING.equals(update.getMessage().getText())) {
                 message = new SendMessage()
                         .setChatId(update.getMessage().getChatId())
@@ -44,6 +46,13 @@ public class GroupMessageManager {
             }else if(ReputazioneBot.adminManager.isAdministrator(update.getMessage().getFrom().getId()) && StringUtils.startsWithAny(update.getMessage().getText(), CommandConstants.ADMIN_COMMANDS)){
                 message = manageAdminCommands(update);
             }
+        } else if(update.getMessage().getLeftChatMember() != null) {
+            UserManager.removeUser(update.getMessage().getLeftChatMember());
+        } else if(update.getMessage().getNewChatMembers() != null){
+            update
+                .getMessage()
+                .getNewChatMembers()
+                .forEach(user -> UserManager.addUser(user));
         }
         return message;
     }
@@ -71,5 +80,13 @@ public class GroupMessageManager {
             }
         }
         return message;
+    }
+
+    public static Integer getLastReputationUpMessage(){
+        return lastReputationUpMessage;
+    }
+
+    public static void setLastReputationUpMessage(Integer msgId){
+        lastReputationUpMessage = msgId;
     }
 }
