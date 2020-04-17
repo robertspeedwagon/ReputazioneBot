@@ -46,6 +46,9 @@ public class UserManager {
         if (tracker == null) {
             tracker = new UserTracker(user.getId(), user.getUserName());
             userCollection.insert(tracker);
+        } else if(!user.getUserName().equals(tracker.getUsername())){
+            tracker.setUsername(user.getUserName());
+            userCollection.update(tracker);
         }
         return tracker;
     }
@@ -77,11 +80,17 @@ public class UserManager {
     }
 
     public static void removeUser(User leftChatMember) {
+        removeUser(leftChatMember, true);
+    }
+
+    public static void removeUser(User leftChatMember, boolean logRemoval) {
         UserTracker removedUser = getOrCreateUserTracker(leftChatMember);
         removedUser.setQuitOn(Date.from(Instant.now()));
         userCollection.update(removedUser);
         userDatabase.commit();
-        Log.log("Utente " + leftChatMember.getUserName() + " [ID: " + leftChatMember.getId() + " uscito dal gruppo.");
+        if(logRemoval) {
+            Log.log("Utente " + leftChatMember.getUserName() + " [ID: " + leftChatMember.getId() + " uscito dal gruppo.");
+        }
     }
 
     public static void addUser(User user) {
@@ -89,14 +98,13 @@ public class UserManager {
         if (userTracker.getQuitOn() != null) {
             userTracker.setQuitOn(null);
             userCollection.update(userTracker);
-        } else {
-            userCollection.insert(userTracker);
         }
         userDatabase.commit();
         Log.log("Utente " + user.getUserName() + " [ID: " + user.getId() + "] entrato nel gruppo.");
     }
 
     public static void removeUser(User leftChatMember, User kickedBy) {
+        removeUser(leftChatMember, false);
         Log.log("Utente " + leftChatMember.getUserName() + " [ID: " + leftChatMember.getId() + "] rimosso dal gruppo da " + kickedBy.getUserName() + " [ID: " + kickedBy.getId() + "]");
     }
 
@@ -106,7 +114,9 @@ public class UserManager {
             Date oneWeekAgo = Date.from(Instant.now().minus(Long.parseLong(ReputazioneBot.config.getProperty("misc.daysBeforeRemovingUser", "7")), ChronoUnit.DAYS));
             WriteResult result = userCollection.remove(ObjectFilters.lt("quitOn", oneWeekAgo));
             result.forEach(nitriteId -> Log.log("Rimosso definitivamente l'utente con il NitriteId: " + nitriteId.toString()));
-            userDatabase.commit();
+            if(result.getAffectedCount() > 0 || userDatabase.hasUnsavedChanges()){
+                userDatabase.commit();
+            }
         }
     }
 }

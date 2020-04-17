@@ -2,10 +2,8 @@ package org.speedwagonfoundation.reputazionebot.system.log;
 
 import org.speedwagonfoundation.reputazionebot.system.ReputazioneBot;
 import org.telegram.telegrambots.meta.api.objects.User;
-import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.text.DateFormat;
@@ -25,7 +23,7 @@ public class Log {
         FORMATTER = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         try {
             // TODO: Replace with logfolder maybe?
-            File logFile = new File(ReputazioneBot.config.getProperty("misc.logfile"));
+            File logFile = new File(ReputazioneBot.config.getProperty("misc.logfile", "reputazionebot.log"));
             logFile.createNewFile();
             logger = new PrintWriter(logFile);
         } catch (IOException e) {
@@ -67,10 +65,19 @@ public class Log {
         logError("Errore durate l'esecuzione del bot! Dettaglio errore: ");
         e.printStackTrace();
         e.printStackTrace(logger);
+        logger.flush();
     }
 
     public static void logReputationChange(User changedReputation, User reputationChanger, long newReputation) {
         log(reputationChanger.getUserName() + " [ID: " + reputationChanger.getId() + "] " +
                 "ha cambiato la reputazione di " + changedReputation.getUserName() + " [ID: " + changedReputation.getId() + "] a " + newReputation);
+    }
+
+    public static void logCommands(User user, boolean isAdmin) {
+        if(isAdmin){
+            log("Inviati comandi di amministrazione a: " + user.getUserName() + " [ID: " + user.getId() + "]");
+        }else{
+            log("Inviati comandi a: " + user.getUserName() + " [ID: " + user.getId() + "]");
+        }
     }
 }

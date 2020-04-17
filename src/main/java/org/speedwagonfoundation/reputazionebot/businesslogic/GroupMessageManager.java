@@ -1,6 +1,7 @@
 package org.speedwagonfoundation.reputazionebot.businesslogic;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.math.NumberUtils;
 import org.speedwagonfoundation.reputazionebot.businesslogic.constants.CommandConstants;
 import org.speedwagonfoundation.reputazionebot.businesslogic.usersmanagement.UserManager;
 import org.speedwagonfoundation.reputazionebot.system.ReputazioneBot;
@@ -26,16 +27,29 @@ public class GroupMessageManager {
                 } else{
                     StringBuilder builder = new StringBuilder();
                     builder
-                            .append("@")
-                            .append(update.getMessage().getFrom().getUserName())
-                            .append(" ha aumentato la reputazione di: @")
-                            .append(update.getMessage().getReplyToMessage().getFrom().getUserName())
-                            .append(" (")
-                            .append(UserManager.scoreUp(update.getMessage().getReplyToMessage().getFrom()))
-                            .append(").");
+                        .append(update.getMessage().getFrom().getFirstName());
+                    if(update.getMessage().getFrom().getLastName() != null) {
+                        builder
+                            .append(" ")
+                            .append(update.getMessage().getFrom().getLastName());
+                    }
+                    builder
+                        .append(" (")
+                        .append(UserManager.getOrCreateUserTracker(update.getMessage().getFrom()).getScore())
+                        .append(") ha aumentato la reputazione di: ")
+                        .append(update.getMessage().getReplyToMessage().getFrom().getFirstName());
+                        if(update.getMessage().getReplyToMessage().getFrom().getLastName() != null){
+                            builder
+                                .append(" ")
+                                .append(update.getMessage().getReplyToMessage().getFrom().getLastName());
+                        }
+                    builder
+                        .append(" (")
+                        .append(UserManager.scoreUp(update.getMessage().getReplyToMessage().getFrom()))
+                        .append(").");
                     message
-                            .setChatId(update.getMessage().getChatId())
-                            .setText(builder.toString());
+                        .setChatId(update.getMessage().getChatId())
+                        .setText(builder.toString());
                     Log.logReputationUp(update.getMessage().getReplyToMessage().getFrom(), update.getMessage().getFrom());
                 }
             } else if(CommandConstants.PROFILE.equals(update.getMessage().getText())) {
@@ -46,8 +60,8 @@ public class GroupMessageManager {
                         + "] ha richiesto il suo profilo");
             }else if(CommandConstants.RANKING.equals(update.getMessage().getText())) {
                 message = new SendMessage()
-                        .setChatId(update.getMessage().getChatId())
-                        .setText(UserManager.getRanking());
+                    .setChatId(update.getMessage().getChatId())
+                    .setText(UserManager.getRanking());
                 Log.log("L'utente " + update.getMessage().getFrom().getUserName() + " [ID: " + update.getMessage().getFrom().getId()
                     + "] ha richiesto la classifica della reputazione");
             }else if(StringUtils.startsWithAny(update.getMessage().getText(), CommandConstants.ADMIN_COMMANDS)){
@@ -79,7 +93,7 @@ public class GroupMessageManager {
                 && update.getMessage().getReplyToMessage() != null) {
             message = new SendMessage();
             String[] splitMessage = update.getMessage().getText().split(" ");
-            if(splitMessage.length == 2 && StringUtils.isNumeric(splitMessage[1])){
+            if(splitMessage.length == 2 && NumberUtils.isCreatable(splitMessage[1])){
                 UserManager.setScore(update.getMessage().getReplyToMessage().getFrom(), Long.parseLong(splitMessage[1]));
                 message = new SendMessage()
                         .setChatId(update.getMessage().getChatId())
@@ -89,11 +103,11 @@ public class GroupMessageManager {
         } else if(StringUtils.startsWith(update.getMessage().getText(), CommandConstants.ADD_POINTS)
                 && update.getMessage().getReplyToMessage() != null){
             String[] splitMessage = update.getMessage().getText().split(" ");
-            if(splitMessage.length == 2 && StringUtils.isNumeric(splitMessage[1])){
+            if(splitMessage.length == 2 && NumberUtils.isCreatable(splitMessage[1])){
                 Long newScore = UserManager.addScore(update.getMessage().getReplyToMessage().getFrom(), Long.parseLong(splitMessage[1]));
                 message = new SendMessage()
-                        .setChatId(update.getMessage().getChatId())
-                        .setText("Reputazione di @" + update.getMessage().getReplyToMessage().getFrom().getUserName() + " modificata a " + newScore);
+                    .setChatId(update.getMessage().getChatId())
+                    .setText("Reputazione di @" + update.getMessage().getReplyToMessage().getFrom().getUserName() + " modificata a " + newScore);
                 Log.logReputationChange(update.getMessage().getReplyToMessage().getFrom(), update.getMessage().getFrom(), newScore);
             }
         }

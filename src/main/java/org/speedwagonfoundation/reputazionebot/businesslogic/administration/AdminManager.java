@@ -8,23 +8,17 @@ import java.util.ArrayList;
 
 public class AdminManager {
     private ArrayList<Integer> adminIds;
-    private boolean initialized = false;
-
-    public boolean isInitialized() {
-        return initialized;
-    }
 
     public void init(ArrayList<ChatMember> getAdminsResult) {
         if(getAdminsResult != null){
             adminIds = new ArrayList<>();
             getAdminsResult
-                    .forEach(user -> adminIds.add(((ChatMember)user).getUser().getId()));
-            initialized = true;
+                    .forEach(user -> adminIds.add(user.getUser().getId()));
         }
         Log.log("Elenco amministratori inizializzato.");
     }
 
     public boolean isAdministrator(Integer id) {
-        return adminIds.contains(id);
+        return adminIds != null ? adminIds.contains(id) : false;
     }
 }
