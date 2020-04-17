@@ -4,6 +4,7 @@ import org.speedwagonfoundation.reputazionebot.system.ReputazioneBot;
 import org.telegram.telegrambots.meta.api.objects.User;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.text.DateFormat;
@@ -25,7 +26,7 @@ public class Log {
             // TODO: Replace with logfolder maybe?
             File logFile = new File(ReputazioneBot.config.getProperty("misc.logfile", "reputazionebot.log"));
             logFile.createNewFile();
-            logger = new PrintWriter(logFile);
+            logger = new PrintWriter(new FileOutputStream(logFile, true));
         } catch (IOException e) {
             Log.logException(e);
         }
