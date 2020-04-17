@@ -63,7 +63,11 @@ public class Log {
     }
 
     public static void logException(Exception e){
-        logError("Errore durate l'esecuzione del bot! Dettaglio errore: ");
+        logException(e, "Errore durate l'esecuzione del bot! Dettaglio errore: ");
+    }
+
+    public static void logException(Exception e, String customMessage){
+        logError(customMessage);
         e.printStackTrace();
         e.printStackTrace(logger);
         logger.flush();

@@ -9,8 +9,35 @@ import org.speedwagonfoundation.reputazionebot.system.log.Log;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
 
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Random;
+
 public class GroupMessageManager {
 
+    private static final String[] insulti;
+    private static final Random rand;
+    static{
+        ArrayList<String> insultiArrayList = new ArrayList<>();
+        try {
+            BufferedReader br = new BufferedReader(new FileReader("messages.txt"));
+            String line = null;
+            while ((line = br.readLine()) != null) {
+                insultiArrayList.add(line);
+            }
+            if(insultiArrayList.isEmpty()){
+                insultiArrayList.add("Non si bara!");
+            }
+        } catch (IOException e) {
+            insultiArrayList.add("Non si bara!");
+            Log.logError("Errore nell'accesso al file della lista degli insulti. Uso insulti di default.");
+        }
+        insulti = insultiArrayList.toArray(new String[insultiArrayList.size()]);
+        rand = new Random();
+    }
     private static Integer lastReputationUpMessage;
 
     public static SendMessage manageMessageFromGroup(Update update) {
@@ -22,7 +49,7 @@ public class GroupMessageManager {
                 if(update.getMessage().getFrom().getId().equals(update.getMessage().getReplyToMessage().getFrom().getId())){
                     message
                             .setChatId(update.getMessage().getChatId())
-                            .setText("Non si bara!");
+                            .setText(insulti[rand.nextInt(insulti.length)]);
                     Log.logSelfReputation(update.getMessage().getFrom());
                 } else{
                     StringBuilder builder = new StringBuilder();

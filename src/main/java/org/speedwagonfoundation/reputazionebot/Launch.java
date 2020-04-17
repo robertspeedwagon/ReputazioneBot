@@ -9,10 +9,10 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiRequestException;
 import java.io.IOException;
 
 public class Launch {
-    public static void main(String[] args) throws IOException, TelegramApiRequestException {
+    public static void main(String[] args) throws IOException {
         ApiContextInitializer.init();
         TelegramBotsApi botsApi = new TelegramBotsApi();
-        try{
+        try {
             botsApi.registerBot(new ReputazioneBot());
         } catch (TelegramApiRequestException e) {
             Log.logException(e);
