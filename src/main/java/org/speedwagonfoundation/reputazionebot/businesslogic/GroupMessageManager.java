@@ -62,10 +62,8 @@ public class GroupMessageManager {
                 JSONObject obj = array.getJSONObject(i);
                 easterEggs.put(obj.getLong("points"), eggsFolder + "/" + obj.getString("image"));
             }
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
+        } catch (Exception e) {
+            Log.logException(e, "Errore nell'inizializzazione degli easter egg. Dettagli sull'errore:");
         }
         return easterEggs;
     }
