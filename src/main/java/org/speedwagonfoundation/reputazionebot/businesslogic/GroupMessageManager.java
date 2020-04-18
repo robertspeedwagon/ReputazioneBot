@@ -19,6 +19,7 @@ import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Random;
@@ -34,8 +35,8 @@ public class GroupMessageManager {
     static{
         ArrayList<String> insultiArrayList = new ArrayList<>();
         try {
-            BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream("messages.txt"), "UTF-8"));
-            String line = null;
+            BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream("messages.txt"), StandardCharsets.UTF_8));
+            String line;
             while ((line = br.readLine()) != null) {
                 insultiArrayList.add(line.replace("\\n", "\n"));
             }
@@ -46,7 +47,7 @@ public class GroupMessageManager {
             insultiArrayList.add("Non si bara!");
             Log.logError("Errore nell'accesso al file della lista degli insulti. Uso insulti di default.");
         }
-        insulti = insultiArrayList.toArray(new String[insultiArrayList.size()]);
+        insulti = insultiArrayList.toArray(new String[0]);
         rand = new Random();
         easterEggs = initEasterEggs();
     }
@@ -55,7 +56,7 @@ public class GroupMessageManager {
         HashMap<Long, String> easterEggs = new HashMap<>();
         String eggsFolder = "custom/eggs";
         try {
-            InputStreamReader reader = new InputStreamReader(new FileInputStream(eggsFolder + "/eggs.json"), "UTF-8");
+            InputStreamReader reader = new InputStreamReader(new FileInputStream(eggsFolder + "/eggs.json"), StandardCharsets.UTF_8);
             JSONTokener tokener = new JSONTokener(reader);
             JSONArray array = new JSONArray(tokener);
             for(int i = 0; i < array.length(); i++){
@@ -110,8 +111,12 @@ public class GroupMessageManager {
                     Log.logReputationUp(update.getMessage().getReplyToMessage().getFrom(), update.getMessage().getFrom());
                     if(easterEggs.containsKey(newScore)){
                         if(StringUtils.substringAfterLast(easterEggs.get(newScore), ".").equals("gif")){
-                            SendAnimation sendVideo = sendMessageToSendAnimation(message);
-                            sendVideo.setAnimation(new File(easterEggs.get(newScore)));
+                            SendAnimation sendAnimation = sendMessageToSendAnimation(message);
+                            sendAnimation.setAnimation(new File(easterEggs.get(newScore)));
+                            return sendAnimation;
+                        } else if(StringUtils.substringAfterLast(easterEggs.get(newScore), ".").equals("mp4")){
+                            SendVideo sendVideo = sendMessageToSendVideo(message);
+                            sendVideo.setVideo(new File(easterEggs.get(newScore)));
                             return sendVideo;
                         } else {
                             SendPhoto sendPhoto = sendMessageToSendPhoto(message);
@@ -171,10 +176,6 @@ public class GroupMessageManager {
         return new SendAnimation()
             .setCaption(message.getText())
             .setChatId(message.getChatId());
-    }
-
-    private static boolean hasEasterEgg(Long score) {
-        return easterEggs.containsKey(score);
     }
 
     private static SendMessage manageAdminCommands(Update update) {

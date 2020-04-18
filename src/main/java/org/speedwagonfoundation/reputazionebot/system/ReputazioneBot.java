@@ -68,6 +68,8 @@ public class ReputazioneBot extends TelegramLongPollingBot {
                              telegramResp = execute((SendAnimation) response);
                         } else if(response instanceof SendPhoto){
                             telegramResp = execute((SendPhoto)response);
+                        } else if(response instanceof SendVideo){
+                            telegramResp = execute((SendVideo)response);
                         } else {
                             telegramResp = execute((SendMessage)response);
                         }
@@ -82,7 +84,7 @@ public class ReputazioneBot extends TelegramLongPollingBot {
                 } catch (TelegramApiException e) {
                     Log.logException(e);
                 }
-            } else if(update.hasMessage() && update.getMessage().getChat().isUserChat()){
+            } else if(update != null && update.hasMessage() && update.getMessage().getChat().isUserChat()){
                 if(update.getMessage().getText().equals(CommandConstants.INFO)){
                     SendMessage response = new SendMessage()
                             .setChatId(update.getMessage().getChatId())
