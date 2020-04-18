@@ -2,31 +2,42 @@ package org.speedwagonfoundation.reputazionebot.businesslogic;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
+import org.json.JSONArray;
+import org.json.JSONObject;
+import org.json.JSONTokener;
 import org.speedwagonfoundation.reputazionebot.businesslogic.constants.CommandConstants;
 import org.speedwagonfoundation.reputazionebot.businesslogic.usersmanagement.UserManager;
 import org.speedwagonfoundation.reputazionebot.system.ReputazioneBot;
 import org.speedwagonfoundation.reputazionebot.system.log.Log;
+import org.telegram.telegrambots.meta.api.methods.BotApiMethod;
+import org.telegram.telegrambots.meta.api.methods.PartialBotApiMethod;
+import org.telegram.telegrambots.meta.api.methods.send.SendAnimation;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.methods.send.SendPhoto;
+import org.telegram.telegrambots.meta.api.methods.send.SendVideo;
+import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 
-import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Random;
 
 public class GroupMessageManager {
 
     private static final String[] insulti;
     private static final Random rand;
+
+    private static Integer lastReputationUpMessage;
+    private static HashMap<Long, String> easterEggs;
+
     static{
         ArrayList<String> insultiArrayList = new ArrayList<>();
         try {
-            BufferedReader br = new BufferedReader(new FileReader("messages.txt"));
+            BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream("messages.txt"), "UTF-8"));
             String line = null;
             while ((line = br.readLine()) != null) {
-                insultiArrayList.add(line);
+                insultiArrayList.add(line.replace("\\n", "\n"));
             }
             if(insultiArrayList.isEmpty()){
                 insultiArrayList.add("Non si bara!");
@@ -37,10 +48,29 @@ public class GroupMessageManager {
         }
         insulti = insultiArrayList.toArray(new String[insultiArrayList.size()]);
         rand = new Random();
+        easterEggs = initEasterEggs();
     }
-    private static Integer lastReputationUpMessage;
 
-    public static SendMessage manageMessageFromGroup(Update update) {
+    private static HashMap<Long, String> initEasterEggs() {
+        HashMap<Long, String> easterEggs = new HashMap<>();
+        String eggsFolder = "custom/eggs";
+        try {
+            InputStreamReader reader = new InputStreamReader(new FileInputStream(eggsFolder + "/eggs.json"), "UTF-8");
+            JSONTokener tokener = new JSONTokener(reader);
+            JSONArray array = new JSONArray(tokener);
+            for(int i = 0; i < array.length(); i++){
+                JSONObject obj = array.getJSONObject(i);
+                easterEggs.put(obj.getLong("points"), eggsFolder + "/" + obj.getString("image"));
+            }
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+        return easterEggs;
+    }
+
+    public static PartialBotApiMethod<Message> manageMessageFromGroup(Update update) {
         SendMessage message = null;
         if(update.getMessage().hasText()) {
             if (CommandConstants.INCREASE_REPUTATION.equals(update.getMessage().getText())
@@ -52,6 +82,7 @@ public class GroupMessageManager {
                             .setText(insulti[rand.nextInt(insulti.length)]);
                     Log.logSelfReputation(update.getMessage().getFrom());
                 } else{
+                    Long newScore = UserManager.scoreUp(update.getMessage().getReplyToMessage().getFrom());
                     StringBuilder builder = new StringBuilder();
                     builder
                         .append(update.getMessage().getFrom().getFirstName());
@@ -70,14 +101,26 @@ public class GroupMessageManager {
                                 .append(" ")
                                 .append(update.getMessage().getReplyToMessage().getFrom().getLastName());
                         }
+
                     builder
                         .append(" (")
-                        .append(UserManager.scoreUp(update.getMessage().getReplyToMessage().getFrom()))
+                        .append(newScore)
                         .append(").");
                     message
                         .setChatId(update.getMessage().getChatId())
                         .setText(builder.toString());
                     Log.logReputationUp(update.getMessage().getReplyToMessage().getFrom(), update.getMessage().getFrom());
+                    if(easterEggs.containsKey(newScore)){
+                        if(StringUtils.substringAfterLast(easterEggs.get(newScore), ".").equals("gif")){
+                            SendAnimation sendVideo = sendMessageToSendAnimation(message);
+                            sendVideo.setAnimation(new File(easterEggs.get(newScore)));
+                            return sendVideo;
+                        } else {
+                            SendPhoto sendPhoto = sendMessageToSendPhoto(message);
+                            sendPhoto.setPhoto(new File(easterEggs.get(newScore)));
+                            return sendPhoto;
+                        }
+                    }
                 }
             } else if(CommandConstants.PROFILE.equals(update.getMessage().getText())) {
                 message = new SendMessage()
@@ -112,6 +155,28 @@ public class GroupMessageManager {
                 .forEach(user -> UserManager.addUser(user));
         }
         return message;
+    }
+
+    private static SendVideo sendMessageToSendVideo(SendMessage message) {
+        return new SendVideo()
+            .setCaption(message.getText())
+            .setChatId(message.getChatId());
+    }
+
+    private static SendPhoto sendMessageToSendPhoto(SendMessage message) {
+        return new SendPhoto()
+            .setCaption(message.getText())
+            .setChatId(message.getChatId());
+    }
+
+    private static SendAnimation sendMessageToSendAnimation(SendMessage message) {
+        return new SendAnimation()
+            .setCaption(message.getText())
+            .setChatId(message.getChatId());
+    }
+
+    private static boolean hasEasterEgg(Long score) {
+        return easterEggs.containsKey(score);
     }
 
     private static SendMessage manageAdminCommands(Update update) {

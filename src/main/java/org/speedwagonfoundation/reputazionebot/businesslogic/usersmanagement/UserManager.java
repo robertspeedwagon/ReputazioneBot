@@ -1,5 +1,6 @@
 package org.speedwagonfoundation.reputazionebot.businesslogic.usersmanagement;
 
+import org.apache.commons.lang3.StringUtils;
 import org.dizitart.no2.*;
 import org.dizitart.no2.objects.ObjectRepository;
 import org.dizitart.no2.objects.filters.ObjectFilters;
@@ -8,6 +9,7 @@ import org.speedwagonfoundation.reputazionebot.system.ReputazioneBot;
 import org.speedwagonfoundation.reputazionebot.system.log.Log;
 import org.telegram.telegrambots.meta.api.objects.User;
 
+import java.io.File;
 import java.util.Date;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -22,6 +24,7 @@ public class UserManager {
     private static final Timer deleteTimer;
 
     static {
+        new File(StringUtils.substringBeforeLast(ReputazioneBot.config.getProperty("db.path"), "/")).mkdirs();
         userDatabase = Nitrite.builder()
                 .compressed()
                 .filePath(ReputazioneBot.config.getProperty("db.path"))

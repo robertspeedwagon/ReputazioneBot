@@ -5,8 +5,13 @@ import org.speedwagonfoundation.reputazionebot.businesslogic.administration.Admi
 import org.speedwagonfoundation.reputazionebot.businesslogic.constants.CommandConstants;
 import org.speedwagonfoundation.reputazionebot.system.log.Log;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
+import org.telegram.telegrambots.meta.api.methods.BotApiMethod;
+import org.telegram.telegrambots.meta.api.methods.PartialBotApiMethod;
 import org.telegram.telegrambots.meta.api.methods.groupadministration.GetChatAdministrators;
+import org.telegram.telegrambots.meta.api.methods.send.SendAnimation;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.methods.send.SendPhoto;
+import org.telegram.telegrambots.meta.api.methods.send.SendVideo;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.DeleteMessage;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
@@ -15,6 +20,7 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.Properties;
 
 public class ReputazioneBot extends TelegramLongPollingBot {
@@ -55,10 +61,18 @@ public class ReputazioneBot extends TelegramLongPollingBot {
         try {
             if(update != null && update.hasMessage() && (update.getMessage().getChat().isSuperGroupChat() || update.getMessage().getChat().isGroupChat())) {
                 try {
-                    SendMessage response = GroupMessageManager.manageMessageFromGroup(update);
+                    PartialBotApiMethod<Message> response = GroupMessageManager.manageMessageFromGroup(update);
                     if(response != null){
-                        Message telegramResp = execute(response);
-                        if(update.getMessage() != null && CommandConstants.INCREASE_REPUTATION.equals(update.getMessage().getText())){
+                        Message telegramResp;
+                        if(response instanceof SendAnimation){
+                             telegramResp = execute((SendAnimation) response);
+                        } else if(response instanceof SendPhoto){
+                            telegramResp = execute((SendPhoto)response);
+                        } else {
+                            telegramResp = execute((SendMessage)response);
+                        }
+
+                        if(update.getMessage() != null && CommandConstants.INCREASE_REPUTATION.equals(update.getMessage().getText()) && response instanceof SendMessage){
                             if(GroupMessageManager.getLastReputationUpMessage() != null) {
                                 execute(new DeleteMessage(update.getMessage().getChatId(), GroupMessageManager.getLastReputationUpMessage()));
                             }
