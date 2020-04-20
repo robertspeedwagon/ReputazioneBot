@@ -1,11 +1,12 @@
 package org.speedwagonfoundation.reputazionebot.system;
 
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.speedwagonfoundation.reputazionebot.businesslogic.GroupMessageManager;
+import org.speedwagonfoundation.reputazionebot.businesslogic.UserMessageManager;
 import org.speedwagonfoundation.reputazionebot.businesslogic.administration.AdminManager;
 import org.speedwagonfoundation.reputazionebot.businesslogic.constants.CommandConstants;
 import org.speedwagonfoundation.reputazionebot.system.log.Log;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
-import org.telegram.telegrambots.meta.api.methods.BotApiMethod;
 import org.telegram.telegrambots.meta.api.methods.PartialBotApiMethod;
 import org.telegram.telegrambots.meta.api.methods.groupadministration.GetChatAdministrators;
 import org.telegram.telegrambots.meta.api.methods.send.SendAnimation;
@@ -20,7 +21,6 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.Serializable;
 import java.util.Properties;
 
 public class ReputazioneBot extends TelegramLongPollingBot {
@@ -59,69 +59,46 @@ public class ReputazioneBot extends TelegramLongPollingBot {
     public void onUpdateReceived(Update update) {
         // TODO: Trovare un metodo migliore per loggare le eccezioni rispetto a rinchiudere tutto il bot in un try
         try {
-            if(update != null && update.hasMessage() && (update.getMessage().getChat().isSuperGroupChat() || update.getMessage().getChat().isGroupChat())) {
-                try {
-                    PartialBotApiMethod<Message> response = GroupMessageManager.manageMessageFromGroup(update);
-                    if(response != null){
-                        Message telegramResp;
-                        if(response instanceof SendAnimation){
-                             telegramResp = execute((SendAnimation) response);
-                        } else if(response instanceof SendPhoto){
-                            telegramResp = execute((SendPhoto)response);
-                        } else if(response instanceof SendVideo){
-                            telegramResp = execute((SendVideo)response);
-                        } else {
-                            telegramResp = execute((SendMessage)response);
-                        }
-
-                        if(update.getMessage() != null && CommandConstants.INCREASE_REPUTATION.equals(update.getMessage().getText()) && response instanceof SendMessage){
-                            if(GroupMessageManager.getLastReputationUpMessage() != null) {
-                                execute(new DeleteMessage(update.getMessage().getChatId(), GroupMessageManager.getLastReputationUpMessage()));
-                            }
-                            GroupMessageManager.setLastReputationUpMessage(telegramResp.getMessageId());
-                        }
+            if(update != null && update.hasMessage() && (update.getMessage().getChat().isSuperGroupChat() || update.getMessage().getChat().isGroupChat()) && update.getMessage().getChatId().toString().equals(config.getProperty("telegram.chatid"))) {
+                PartialBotApiMethod<Message> response = GroupMessageManager.manageMessageFromGroup(update);
+                if(response != null){
+                    Message telegramResp;
+                    if(response instanceof SendAnimation){
+                         telegramResp = execute((SendAnimation) response);
+                    } else if(response instanceof SendPhoto){
+                        telegramResp = execute((SendPhoto)response);
+                    } else if(response instanceof SendVideo){
+                        telegramResp = execute((SendVideo)response);
+                    } else {
+                        telegramResp = execute((SendMessage)response);
                     }
-                } catch (TelegramApiException e) {
-                    Log.logException(e);
+                    if(update.getMessage() != null && CommandConstants.INCREASE_REPUTATION.equals(update.getMessage().getText()) && response instanceof SendMessage){
+                        if(GroupMessageManager.getLastReputationUpMessage() != null) {
+                            execute(new DeleteMessage(update.getMessage().getChatId(), GroupMessageManager.getLastReputationUpMessage()));
+                        }
+                        GroupMessageManager.setLastReputationUpMessage(telegramResp.getMessageId());
+                    }
                 }
             } else if(update != null && update.hasMessage() && update.getMessage().getChat().isUserChat()){
-                if(update.getMessage().getText().equals(CommandConstants.INFO)){
-                    SendMessage response = new SendMessage()
-                            .setChatId(update.getMessage().getChatId())
-                            .setText("Bot sviluppato da @Muso97 per Hentai Club" +
-                                    "\nCodice sorgente: https://github.com/robertspeedwagon/ReputazioneBot");
-                    Log.log(update.getMessage().getFrom().getUserName() + " [ID: " + update.getMessage().getFrom().getId() + "] ha richiesto le info sul bot");
-                    try {
-                        execute(response);
-                    } catch (TelegramApiException e) {
-                        Log.logException(e);
-                    }
-                } else if(update.getMessage().getText().equals(CommandConstants.COMMANDS)){
-                    StringBuilder sb = new StringBuilder("Lista comandi:\n");
-                    sb.append("_Comandi per chat privata:_\n")
-                        .append("/info: Mostra informazioni sul bot\n")
-                        .append("/comandi: Mostra questa guida\n\n")
-                        .append("_Comandi per il gruppo:_\n")
-                        .append("/profilo: Mostra il profilo dell'utente\n")
-                        .append("/classifica: Mostra i 10 utenti con più reputazione");
-                    if(adminManager.isAdministrator(update.getMessage().getFrom().getId())){
-                        sb.append("\n\n_Comandi di amministrazione per il gruppo:_\n")
-                            .append("/setpoints *\\<punti\\>*: Usato in risposta ad un messaggio imposta il punteggio della persona che ha inviato quel messaggio al numero di punti specificato\n")
-                            .append("/addpoints *\\<punti\\>*: Usato in risposta ad un messaggio aumenta il punteggio della persona che ha inviato quel messaggio del numero di punti specificato\n");
-                        Log.logCommands(update.getMessage().getFrom(), true);
-                    } else{
-                        Log.logCommands(update.getMessage().getFrom(), false);
-                    }
-                    try {
-                        execute(new SendMessage().enableMarkdownV2(true).setChatId(update.getMessage().getChatId()).setText(sb.toString()));
-                    } catch (TelegramApiException e) {
-                        Log.logException(e);
-                    }
+                SendMessage message = UserMessageManager.manageUserMessage(update);
+                if(message != null){
+                    execute(message);
                 }
             }
         } catch(Exception e){
             Log.logException(e);
-            throw e;
+            reportErrorToDeveloper(e);
+        }
+    }
+
+    public void reportErrorToDeveloper(Exception e) {
+        SendMessage message = new SendMessage()
+            .setText("Maestro, si è verificato un errore! Qui i dettagli:\n" + ExceptionUtils.getStackTrace(e))
+            .setChatId(config.getProperty("debug.developertelegramid"));
+        try {
+            execute(message);
+        } catch (TelegramApiException telegramApiException) {
+            Log.logException(e, "Errore nell'invio del messaggio di segnalazione. Brutta giornata eh, maestro Speedwagon?");
         }
     }
 

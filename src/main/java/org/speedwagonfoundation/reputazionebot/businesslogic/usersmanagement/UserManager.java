@@ -49,7 +49,7 @@ public class UserManager {
         if (tracker == null) {
             tracker = new UserTracker(user.getId(), user.getUserName());
             userCollection.insert(tracker);
-        } else if(!user.getUserName().equals(tracker.getUsername())){
+        } else if(user != null && user.getUserName() != null && !user.getUserName().equals(tracker.getUsername())){
             tracker.setUsername(user.getUserName());
             userCollection.update(tracker);
         }

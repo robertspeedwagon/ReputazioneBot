@@ -65,11 +65,13 @@ public class GroupMessageManager {
             }
         } catch (Exception e) {
             Log.logException(e, "Errore nell'inizializzazione degli easter egg. Dettagli sull'errore:");
+            Log.logError("Easter egg disabilitati");
         }
+        Log.log("Easter egg abilitati con successo");
         return easterEggs;
     }
 
-    public static PartialBotApiMethod<Message> manageMessageFromGroup(Update update) {
+    public static PartialBotApiMethod<Message> manageMessageFromGroup(Update update) throws Exception{
         SendMessage message = null;
         if(update.getMessage().hasText()) {
             if (CommandConstants.INCREASE_REPUTATION.equals(update.getMessage().getText())
@@ -156,7 +158,7 @@ public class GroupMessageManager {
                 .getMessage()
                 .getNewChatMembers()
                 .forEach(user -> UserManager.addUser(user));
-        }
+        } //else if(update.)
         return message;
     }
 
