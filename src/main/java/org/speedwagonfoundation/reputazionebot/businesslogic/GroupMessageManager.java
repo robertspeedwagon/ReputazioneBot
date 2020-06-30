@@ -74,7 +74,11 @@ public class GroupMessageManager {
     public static PartialBotApiMethod<Message> manageMessageFromGroup(Update update) throws Exception{
         SendMessage message = null;
         if(update.getMessage().hasText()) {
-            if (CommandConstants.INCREASE_REPUTATION.equals(update.getMessage().getText())
+            String inText = update.getMessage().getText();
+            if(inText.endsWith("@" + ReputazioneBot.config.getProperty("telegram.username"))){
+                inText = StringUtils.substringBeforeLast(inText, "@");
+            }
+            if (CommandConstants.INCREASE_REPUTATION.equals(inText)
                     && update.getMessage().getReplyToMessage() != null){
                 message = new SendMessage();
                 if(update.getMessage().getFrom().getId().equals(update.getMessage().getReplyToMessage().getFrom().getId())){
@@ -127,19 +131,19 @@ public class GroupMessageManager {
                         }
                     }
                 }
-            } else if(CommandConstants.PROFILE.equals(update.getMessage().getText())) {
+            } else if(CommandConstants.PROFILE.equals(inText)) {
                 message = new SendMessage()
                     .setChatId(update.getMessage().getChatId())
                     .setText(UserManager.getOrCreateUserTracker(update.getMessage().getFrom()).toString());
                 Log.log("L'utente " + update.getMessage().getFrom().getUserName() + " [ID: " + update.getMessage().getFrom().getId()
                         + "] ha richiesto il suo profilo");
-            }else if(CommandConstants.RANKING.equals(update.getMessage().getText())) {
+            }else if(CommandConstants.RANKING.equals(inText)) {
                 message = new SendMessage()
                     .setChatId(update.getMessage().getChatId())
                     .setText(UserManager.getRanking());
                 Log.log("L'utente " + update.getMessage().getFrom().getUserName() + " [ID: " + update.getMessage().getFrom().getId()
                     + "] ha richiesto la classifica della reputazione");
-            }else if(StringUtils.startsWithAny(update.getMessage().getText(), CommandConstants.ADMIN_COMMANDS)){
+            }else if(StringUtils.startsWithAny(inText, CommandConstants.ADMIN_COMMANDS)){
                 if(ReputazioneBot.adminManager.isAdministrator(update.getMessage().getFrom().getId())){
                     message = manageAdminCommands(update);
                 }else {
