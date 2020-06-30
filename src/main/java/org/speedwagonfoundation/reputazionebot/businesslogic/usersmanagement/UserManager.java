@@ -35,11 +35,8 @@ public class UserManager {
         Log.log("Database utenti caricato");
     }
 
-    public static Long scoreUp(User user) {
-        UserTracker tracker = getOrCreateUserTracker(user);
-        Long score = tracker.scoreUp();
-        userCollection.update(tracker);
-        userDatabase.commit();
+    public static Long scoreUp(User user, Long pointsToAdd) {
+        Long score = addScore(user, pointsToAdd);
         return score;
     }
 

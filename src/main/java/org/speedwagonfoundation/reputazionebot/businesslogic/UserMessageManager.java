@@ -13,8 +13,9 @@ public class UserMessageManager {
         if(CommandConstants.INFO.equals(update.getMessage().getText())){
             response = new SendMessage()
                 .setChatId(update.getMessage().getChatId())
-                .setText("Bot sviluppato da @Muso97 per Hentai Club" +
-                    "\nCodice sorgente: https://github.com/robertspeedwagon/ReputazioneBot");
+                .setText("Bot sviluppato da @AyanamiRei00 per Hentai Club" +
+                    "\nCodice sorgente: https://github.com/robertspeedwagon/ReputazioneBot" +
+                    "\nFieramente LGBT <3");
             Log.log(update.getMessage().getFrom().getUserName() + " [ID: " + update.getMessage().getFrom().getId() + "] ha richiesto le info sul bot");
         } else if(CommandConstants.COMMANDS.equals(update.getMessage().getText())){
             StringBuilder sb = new StringBuilder("Lista comandi:\n");

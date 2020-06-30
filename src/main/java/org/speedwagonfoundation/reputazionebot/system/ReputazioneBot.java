@@ -72,7 +72,7 @@ public class ReputazioneBot extends TelegramLongPollingBot {
                     } else {
                         telegramResp = execute((SendMessage)response);
                     }
-                    if(update.getMessage() != null && CommandConstants.INCREASE_REPUTATION.equals(update.getMessage().getText()) && response instanceof SendMessage){
+                    if(update.getMessage() != null && GroupMessageManager.isRepIncrease(update.getMessage().getText()) && response instanceof SendMessage){
                         if(GroupMessageManager.getLastReputationUpMessage() != null) {
                             execute(new DeleteMessage(update.getMessage().getChatId(), GroupMessageManager.getLastReputationUpMessage()));
                         }

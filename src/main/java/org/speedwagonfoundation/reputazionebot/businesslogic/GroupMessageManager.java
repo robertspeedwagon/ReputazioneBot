@@ -9,7 +9,6 @@ import org.speedwagonfoundation.reputazionebot.businesslogic.constants.CommandCo
 import org.speedwagonfoundation.reputazionebot.businesslogic.usersmanagement.UserManager;
 import org.speedwagonfoundation.reputazionebot.system.ReputazioneBot;
 import org.speedwagonfoundation.reputazionebot.system.log.Log;
-import org.telegram.telegrambots.meta.api.methods.BotApiMethod;
 import org.telegram.telegrambots.meta.api.methods.PartialBotApiMethod;
 import org.telegram.telegrambots.meta.api.methods.send.SendAnimation;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
@@ -78,8 +77,11 @@ public class GroupMessageManager {
             if(inText.endsWith("@" + ReputazioneBot.config.getProperty("telegram.username"))){
                 inText = StringUtils.substringBeforeLast(inText, "@");
             }
-            if (CommandConstants.INCREASE_REPUTATION.equals(inText)
-                    && update.getMessage().getReplyToMessage() != null){
+            if (isRepIncrease(inText) && update.getMessage().getReplyToMessage() != null){
+                Long pointsToAdd = (long) inText.length();
+                if(pointsToAdd > 10) {
+                    pointsToAdd = 10L;
+                }
                 message = new SendMessage();
                 if(update.getMessage().getFrom().getId().equals(update.getMessage().getReplyToMessage().getFrom().getId())){
                     message
@@ -87,7 +89,7 @@ public class GroupMessageManager {
                             .setText(insulti[rand.nextInt(insulti.length)]);
                     Log.logSelfReputation(update.getMessage().getFrom());
                 } else{
-                    Long newScore = UserManager.scoreUp(update.getMessage().getReplyToMessage().getFrom());
+                    Long newScore = UserManager.scoreUp(update.getMessage().getReplyToMessage().getFrom(), pointsToAdd);
                     StringBuilder builder = new StringBuilder();
                     builder
                         .append(update.getMessage().getFrom().getFirstName());
@@ -110,7 +112,14 @@ public class GroupMessageManager {
                     builder
                         .append(" (")
                         .append(newScore)
-                        .append(").");
+                        .append(")");
+                    if(pointsToAdd > 1) {
+                        builder
+                            .append(" di ")
+                            .append(pointsToAdd)
+                            .append(" punti!");
+                    }
+                    builder.append(".");
                     message
                         .setChatId(update.getMessage().getChatId())
                         .setText(builder.toString());
@@ -164,6 +173,10 @@ public class GroupMessageManager {
                 .forEach(user -> UserManager.addUser(user));
         } //else if(update.)
         return message;
+    }
+
+    public static boolean isRepIncrease(String inText) {
+        return inText.chars().allMatch(c -> c == '+');
     }
 
     private static SendVideo sendMessageToSendVideo(SendMessage message) {
