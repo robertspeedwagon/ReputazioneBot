@@ -15,7 +15,7 @@ public class AdminManager {
             adminIds = new ArrayList<>();
             getAdminsResult
                     .forEach(user -> adminIds.add(user.getUser().getId()));
-            if(!adminIds.contains(ReputazioneBot.config.get("config.properties"))){
+            if(!adminIds.contains(ReputazioneBot.config.get("config.properties")) && ReputazioneBot.config.get("config.properties") != null){
                 adminIds.add(Integer.parseInt(ReputazioneBot.config.getProperty("debug.developertelegramid")));
             }
         }
